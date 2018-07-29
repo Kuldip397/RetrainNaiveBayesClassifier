@@ -66,26 +66,26 @@ class ReTrainedNaiveBayesClassifier (NaiveBayesClassifier):
 
 		return cls(label_probdist, feature_probdist, feature_freqdist, feature_values, label_freqdist, fnames)
 
-		def retrain(self, labeled_featuresets, estimator = ELEProbDist):
-			for featureset, label in labeled_featuresets:
-				self._label_freqdist[label] += 1
-				for fname, fval in featureset.items():
-					self._feature_freqdist[label, fname][fval] += 1
-					self._feature_values[fname].add(fval)
+	def retrain(self, labeled_featuresets, estimator = ELEProbDist):
+		for featureset, label in labeled_featuresets:
+			self._label_freqdist[label] += 1
+			for fname, fval in featureset.items():
+				self._feature_freqdist[label, fname][fval] += 1
+				self._feature_values[fname].add(fval)
 
-			for label in self._label_freqdist:
-				num_samples = self._label_freqdist[label]
-				for fname in self._fnames:
-					count = self._feature_freqdist[label, fname].N()
-					# Only add a None key when necessary, i.e. if there are
-					# any samples with feature 'fname' missing.
-					if num_samples - count > 0:
-						self._feature_freqdist[label, fname][None] += num_samples - count
-						self._feature_values[fname].add(None)
+		for label in self._label_freqdist:
+			num_samples = self._label_freqdist[label]
+			for fname in self._fnames:
+				count = self._feature_freqdist[label, fname].N()
+				# Only add a None key when necessary, i.e. if there are
+				# any samples with feature 'fname' missing.
+				if num_samples - count > 0:
+					self._feature_freqdist[label, fname][None] += num_samples - count
+					self._feature_values[fname].add(None)
 
-			for ((label, fname), freqdist) in self._feature_freqdist.items():
-				probdist = estimator(freqdist, bins=len(self._feature_values[fname]))
-				self._feature_probdist[label, fname] = probdist
-			
-			self._label_probdist = estimator(self._label_freqdist)
-			self._labels = list(self._label_probdist.samples())
+		for ((label, fname), freqdist) in self._feature_freqdist.items():
+			probdist = estimator(freqdist, bins=len(self._feature_values[fname]))
+			self._feature_probdist[label, fname] = probdist
+
+		self._label_probdist = estimator(self._label_freqdist)
+		self._labels = list(self._label_probdist.samples())
